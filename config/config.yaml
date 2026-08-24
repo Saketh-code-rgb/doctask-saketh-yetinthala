@@ -1,0 +1,48 @@
+# Non-secret runtime settings.
+#
+# Secrets never appear in this file. GITHUB_TOKEN and LIBRARIES_IO_API_KEY are
+# read from the environment only, via .env locally. See .env.example and
+# TECHNICAL_DESIGN.md section 19.
+#
+# Scoring weights and gate thresholds live in weights.yaml, not here.
+
+paths:
+  database: data/dependency_map.db
+  library_universe: data/library-universe.yaml
+  output_csv: outputs/ranked-candidates.csv
+  output_markdown: outputs/dependency-map-report.md
+
+cache:
+  # TECHNICAL_DESIGN.md section 14: "a generous default of about 7 days, since
+  # repository metadata doesn't change hour to hour".
+  ttl_days: 7
+
+# GitHub uses three separate rate-limit buckets, and each gets its own spacing.
+# Sharing one interval would throttle metadata and file fetches to roughly a
+# ninth of what the API actually allows, which matters most during evidence
+# collection, the call-heaviest stage in the pipeline.
+pacing:
+  # Code search: 10 requests per minute, in its own bucket, authentication
+  # required. TECHNICAL_DESIGN.md section 14 targets "roughly one call every
+  # 6 to 7 seconds, safely under the cap".
+  github_code_search_min_interval_seconds: 6.5
+  # Every other search endpoint: 30 requests per minute.
+  github_search_min_interval_seconds: 2.0
+  # The general REST API: 5,000 requests per hour for an authenticated token.
+  # 0.75s is roughly 4,800 calls/hour, under the limit.
+  github_rest_min_interval_seconds: 0.75
+  # Libraries.io: 60 requests per minute per key. It does not reliably return
+  # rate-limit headers, so this pacing is the only protection there is.
+  libraries_io_min_interval_seconds: 1.0
+
+retry:
+  # "Retried up to a small fixed number of attempts (three)".
+  max_attempts: 3
+  # "Retry delay doubles from a base of about 2 seconds, with a small random
+  # jitter added so that if several calls fail at once they don't all retry in
+  # lockstep."
+  backoff_base_seconds: 2.0
+  backoff_jitter_seconds: 0.5
+  # Ceiling on the exponential part, so a long retry chain can't grow without
+  # bound. Jitter is added on top of this.
+  backoff_max_seconds: 60.0

@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dependency-map"
+version = "0.1.0"
+description = "Discovers and ranks GitHub repositories showing evidence of homegrown document-processing pipelines."
+readme = "README.md"
+requires-python = ">=3.11"
+
+dependencies = [
+    "requests",
+    "click",
+    "pyyaml",
+    "python-dotenv",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+]
+
+[project.scripts]
+dependency-map = "dependency_map.cli:cli"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

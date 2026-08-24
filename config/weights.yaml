@@ -1,0 +1,47 @@
+# Scoring weights and qualification gate thresholds.
+#
+# These live here as data, not as constants in code, specifically so a person
+# can tune them deliberately after reviewing real output. The pipeline never
+# adjusts them on its own, and nothing auto-tunes them against a proxy metric
+# (TECHNICAL_DESIGN.md section 17, IMPLEMENTATION_PLAN.md "What Claude must NOT
+# do").
+#
+# Any change here is a human decision and belongs in PROGRESS.md with the
+# reasoning behind it.
+
+# SCORING_MODEL.md section 10. These must sum to exactly 1.0; config loading
+# refuses to start if they don't, since a typo here would silently distort
+# every ranking that follows.
+#
+# Business Criticality and Pipeline Complexity carry the most weight because
+# together they separate "this repo imports a document library" from "this is a
+# company running a document workflow that costs them engineering time". Both
+# are also the hardest to fake: their top rungs require confirmed code usage
+# and explicit business framing, not mere presence.
+#
+# Maintenance Burden keeps a meaningful 15% even though it defaults to 0 for
+# most candidates in a first pass. Dropping it to protect scores would remove
+# the incentive to go and collect the commit-history evidence it needs.
+dimension_weights:
+  document_volume: 0.15
+  document_complexity: 0.15
+  business_criticality: 0.20
+  pipeline_complexity: 0.20
+  maintenance_burden: 0.15
+  build_vs_buy_signal: 0.10
+  commercial_leverage: 0.05
+
+# SCORING_MODEL.md section 14. Applied after the weighted calculation as a
+# ceiling on final_score, not folded into the arithmetic.
+#
+# Section 17 is explicit that these three numbers are "round numbers chosen for
+# legibility, not derived from anything" and should be revisited once a real
+# batch of candidates shows whether they are too strict or too lenient.
+gate_caps:
+  # Every dependency hit was manifest-only; nothing was ever imported or
+  # invoked in code.
+  code_usage_unconfirmed: 20
+  # The document code only lives in /examples, /test, /scripts, or /demo.
+  document_code_outside_production: 25
+  # A single library category, used in isolation, with no conversion service.
+  single_category_no_infrastructure: 40

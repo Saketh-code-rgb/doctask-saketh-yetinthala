@@ -1,0 +1,341 @@
+# Machine-readable transcription of LIBRARY_UNIVERSE.md.
+#
+# LIBRARY_UNIVERSE.md is the source of truth and holds the reasoning behind
+# every entry. This file is only what code consumes (TECHNICAL_DESIGN.md
+# section 5). Keeping the two in sync is a manual step, flagged as a known
+# limitation in section 24.
+#
+# 30 entries, one per table row in the source document, in source order:
+#   docx                 8   (table 1, DOCX / Word)
+#   pdf                  8   (table 2, PDF)
+#   template_generation  5   (table 3, HTML / Template -> Document)
+#   conversion           4   (table 4, Document Conversion)
+#   other_processing     5   (table 5, Other Document Processing)
+#
+# Do not add, remove, or reclassify an entry here. Change LIBRARY_UNIVERSE.md
+# first, then mirror it.
+#
+# Fields:
+#   library_name             the row's name, verbatim from the source table
+#   ecosystems               list, since several rows span more than one
+#   category                 the source table, mapped to CANDIDATE_SCHEMA.md
+#                            section 4's library_category enum
+#   direction                generation / extraction / conversion / mixed,
+#                            per the closing note in LIBRARY_UNIVERSE.md
+#   package_names            identifiers to search manifests for; a row naming
+#                            several packages stays ONE entry with several names
+#   manifest_filenames       per SEARCH_STRATEGY.md section 2
+#   infrastructure_patterns  only for tools that are not package dependencies
+#                            at all, where the signal lives in a Dockerfile or
+#                            compose file instead
+#   discovery_tier           1 infrastructure / 2 template generation /
+#                            3 broad manifest, per SEARCH_STRATEGY.md section 4
+#
+# discovery_tier is deliberately separate from category. It ranks how precise a
+# discovery query for this entry is expected to be, which is not the same thing
+# as what kind of library it is. Two entries show why they had to be split:
+#
+#   docxtemplater is category docx but tier 2, because it fills templates from
+#   data, so its presence alone implies a generation pipeline.
+#
+#   Puppeteer / Playwright is category template_generation but tier 3, because
+#   both packages are overwhelmingly browser-test tooling and a package.json
+#   query would mostly surface repositories with no document pipeline at all.
+#
+# Tier counts: 3 infrastructure, 5 template generation, 22 broad manifest.
+
+version: 1
+
+libraries:
+
+  # --- Table 1: DOCX / Word ------------------------------------------------
+
+  - library_name: python-docx
+    discovery_tier: 3
+    ecosystems: [python]
+    category: docx
+    direction: generation
+    package_names: [python-docx]
+    manifest_filenames: [requirements.txt, pyproject.toml]
+
+  - library_name: docx4j
+    discovery_tier: 3
+    ecosystems: [java]
+    category: docx
+    direction: generation
+    package_names: [docx4j, org.docx4j]
+    manifest_filenames: [pom.xml, build.gradle]
+
+  - library_name: Apache POI (XWPF/HWPF)
+    discovery_tier: 3
+    ecosystems: [java]
+    category: docx
+    direction: generation
+    package_names: [poi, poi-ooxml, org.apache.poi]
+    manifest_filenames: [pom.xml, build.gradle]
+
+  - library_name: Open XML SDK
+    discovery_tier: 3
+    ecosystems: [dotnet]
+    category: docx
+    direction: generation
+    package_names: [DocumentFormat.OpenXml]
+    manifest_filenames: ["*.csproj", packages.config]
+
+  - library_name: docx (dolanmiu/docx)
+    discovery_tier: 3
+    ecosystems: [javascript]
+    category: docx
+    direction: generation
+    package_names: [docx]
+    manifest_filenames: [package.json]
+
+  - library_name: docxtemplater
+    discovery_tier: 2
+    ecosystems: [javascript]
+    category: docx
+    direction: generation
+    package_names: [docxtemplater]
+    manifest_filenames: [package.json]
+
+  # "Different direction: this is about displaying Word content on the web,
+  # not generating documents." Reads a .docx and emits HTML, so it consumes
+  # rather than authors.
+  - library_name: mammoth / python-mammoth
+    discovery_tier: 3
+    ecosystems: [javascript, python]
+    category: docx
+    direction: extraction
+    package_names: [mammoth, python-mammoth]
+    manifest_filenames: [package.json, requirements.txt, pyproject.toml]
+
+  - library_name: Aspose.Words
+    discovery_tier: 3
+    ecosystems: [dotnet, java, python, cpp]
+    category: docx
+    direction: generation
+    package_names: [Aspose.Words, aspose-words]
+    manifest_filenames:
+      ["*.csproj", packages.config, pom.xml, build.gradle,
+       requirements.txt, pyproject.toml]
+
+  # --- Table 2: PDF --------------------------------------------------------
+
+  # CANDIDATE_SCHEMA.md section 10 records pypdf with direction: extraction.
+  - library_name: pypdf / PyPDF2
+    discovery_tier: 3
+    ecosystems: [python]
+    category: pdf
+    direction: extraction
+    package_names: [pypdf, PyPDF2]
+    manifest_filenames: [requirements.txt, pyproject.toml]
+
+  - library_name: ReportLab
+    discovery_tier: 3
+    ecosystems: [python]
+    category: pdf
+    direction: generation
+    package_names: [reportlab]
+    manifest_filenames: [requirements.txt, pyproject.toml]
+
+  # "Mixed direction: used for both extraction and, less often, generation."
+  - library_name: PyMuPDF (fitz)
+    discovery_tier: 3
+    ecosystems: [python]
+    category: pdf
+    direction: mixed
+    package_names: [PyMuPDF, fitz]
+    manifest_filenames: [requirements.txt, pyproject.toml]
+
+  - library_name: pikepdf
+    discovery_tier: 3
+    ecosystems: [python]
+    category: pdf
+    direction: generation
+    package_names: [pikepdf]
+    manifest_filenames: [requirements.txt, pyproject.toml]
+
+  - library_name: Apache PDFBox
+    discovery_tier: 3
+    ecosystems: [java]
+    category: pdf
+    direction: generation
+    package_names: [pdfbox, org.apache.pdfbox]
+    manifest_filenames: [pom.xml, build.gradle]
+
+  - library_name: iText
+    discovery_tier: 3
+    ecosystems: [java, dotnet]
+    category: pdf
+    direction: generation
+    package_names: [itext, itext7, itextpdf, com.itextpdf]
+    manifest_filenames: [pom.xml, build.gradle, "*.csproj", packages.config]
+
+  - library_name: pdf-lib
+    discovery_tier: 3
+    ecosystems: [javascript]
+    category: pdf
+    direction: generation
+    package_names: [pdf-lib]
+    manifest_filenames: [package.json]
+
+  - library_name: PDFKit
+    discovery_tier: 3
+    ecosystems: [javascript]
+    category: pdf
+    direction: generation
+    package_names: [pdfkit]
+    manifest_filenames: [package.json]
+
+  # --- Table 3: HTML / Template -> Document --------------------------------
+
+  - library_name: docxtpl (python-docx-template)
+    discovery_tier: 2
+    ecosystems: [python]
+    category: template_generation
+    direction: generation
+    package_names: [docxtpl, python-docx-template]
+    manifest_filenames: [requirements.txt, pyproject.toml]
+
+  - library_name: Carbone.io
+    discovery_tier: 2
+    ecosystems: [javascript]
+    category: template_generation
+    direction: generation
+    package_names: [carbone, carbone-sdk]
+    manifest_filenames: [package.json]
+
+  - library_name: JasperReports / Apache FOP
+    discovery_tier: 2
+    ecosystems: [java]
+    category: template_generation
+    direction: generation
+    package_names:
+      [jasperreports, net.sf.jasperreports, fop, org.apache.xmlgraphics]
+    manifest_filenames: [pom.xml, build.gradle]
+
+  # CANDIDATE_SCHEMA.md section 10 records WeasyPrint with
+  # direction: conversion, in category template_generation.
+  - library_name: WeasyPrint
+    discovery_tier: 3
+    ecosystems: [python]
+    category: template_generation
+    direction: conversion
+    package_names: [weasyprint]
+    manifest_filenames: [requirements.txt, pyproject.toml]
+
+  # Same HTML-to-PDF shape as WeasyPrint, which the schema fixes as conversion.
+  - library_name: Puppeteer / Playwright (used for PDF)
+    discovery_tier: 3
+    ecosystems: [javascript]
+    category: template_generation
+    direction: conversion
+    package_names: [puppeteer, playwright]
+    manifest_filenames: [package.json]
+
+  # --- Table 4: Document Conversion ----------------------------------------
+
+  # "Pandoc is a CLI tool, not an importable library, so it won't show up in a
+  # manifest file." SEARCH_STRATEGY.md section 4.
+  - library_name: Pandoc
+    discovery_tier: 1
+    ecosystems: [cli]
+    category: conversion
+    direction: conversion
+    package_names: [pandoc]
+    manifest_filenames: []
+    infrastructure_patterns:
+      - detection: dockerfile
+        filename: Dockerfile
+        pattern: pandoc
+      - detection: subprocess
+        filename: null
+        pattern: subprocess pandoc
+
+  - library_name: LibreOffice headless / unoconv / JODConverter
+    discovery_tier: 1
+    ecosystems: [service]
+    category: conversion
+    direction: conversion
+    package_names: [libreoffice, unoconv, jodconverter]
+    manifest_filenames: []
+    infrastructure_patterns:
+      - detection: dockerfile
+        filename: Dockerfile
+        pattern: libreoffice
+      - detection: compose
+        filename: docker-compose.yml
+        pattern: libreoffice
+      - detection: subprocess
+        filename: null
+        pattern: unoconv
+
+  - library_name: Gotenberg
+    discovery_tier: 1
+    ecosystems: [service]
+    category: conversion
+    direction: conversion
+    package_names: [gotenberg]
+    manifest_filenames: []
+    infrastructure_patterns:
+      - detection: compose
+        filename: docker-compose.yml
+        pattern: gotenberg/gotenberg
+      - detection: dockerfile
+        filename: Dockerfile
+        pattern: gotenberg
+
+  - library_name: Aspose / Spire.Office suites
+    discovery_tier: 3
+    ecosystems: [dotnet, java, python, javascript]
+    category: conversion
+    direction: conversion
+    package_names: [Aspose.Total, Aspose.PDF, Spire.Office, Spire.Doc]
+    manifest_filenames:
+      ["*.csproj", packages.config, pom.xml, build.gradle,
+       requirements.txt, pyproject.toml, package.json]
+
+  # --- Table 5: Other Document Processing ----------------------------------
+
+  - library_name: Apache Tika
+    discovery_tier: 3
+    ecosystems: [java, python]
+    category: other_processing
+    direction: extraction
+    package_names: [tika, tika-core, org.apache.tika]
+    manifest_filenames:
+      [pom.xml, build.gradle, requirements.txt, pyproject.toml]
+
+  - library_name: Unstructured
+    discovery_tier: 3
+    ecosystems: [python]
+    category: other_processing
+    direction: extraction
+    package_names: [unstructured]
+    manifest_filenames: [requirements.txt, pyproject.toml]
+
+  - library_name: Docling
+    discovery_tier: 3
+    ecosystems: [python]
+    category: other_processing
+    direction: extraction
+    package_names: [docling]
+    manifest_filenames: [requirements.txt, pyproject.toml]
+
+  # "A genuinely bidirectional signal: this only gets used where PDF and DOCX
+  # both matter to the same workflow."
+  - library_name: pdf2docx
+    discovery_tier: 3
+    ecosystems: [python]
+    category: other_processing
+    direction: mixed
+    package_names: [pdf2docx]
+    manifest_filenames: [requirements.txt, pyproject.toml]
+
+  - library_name: docx-mailmerge / docxedit
+    discovery_tier: 2
+    ecosystems: [python]
+    category: other_processing
+    direction: generation
+    package_names: [docx-mailmerge, docxedit]
+    manifest_filenames: [requirements.txt, pyproject.toml]
